@@ -93,12 +93,14 @@ print('5. Створити  новий  набір  даних,  прибрав�
       'та  має  визначатися  в  програмі  на  основі  дати  народження  студента,',
       'яка задана в програмі у вигляді текстової змінної формату ‘DD-MM’.')
 def calculate_K(birthdate):
-    day, month = map(int, birthdate.split('-'))
+    day, month = birthdate.split('-')
+    day = int(day)
     K = (day % 9)
     return K
 
 birthdate = '10-08'
 K = calculate_K(birthdate)
+print("K =", K)
 
 class_1_count = data['GT'].sum()
 percent_to_remove = 50 + 5 * K
@@ -126,3 +128,7 @@ print("Кількість об'єктів класу 0 після видален
 print('7. Виконати дії п.3 для нового набору даних.')
 new_metrics = compute_metrics(new_data) # 3a
 plot_metrics(new_metrics) # 3b
+
+
+print(objects_to_remove * 100)
+print(removed_percentage)
