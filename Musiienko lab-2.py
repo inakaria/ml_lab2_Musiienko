@@ -45,6 +45,10 @@ def metrics_df(df, thresholds_step, ind):
         # 3.b
         show_metrics(metrics, model, list_of_thresholds, ind)
 
+        # 3.c
+        show_objects_number(metrics, model, list_of_thresholds, ind)
+        graphs_number_of_objects_and_mertics(metrics, model, list_of_thresholds, ind)
+
         # 3.d
         show_PRC(metrics['recall'], metrics['precision'], model, ind)
         show_ROC(metrics["FPR"], metrics['recall'], model, ind)
@@ -126,8 +130,57 @@ def show_metrics(metrics, model_name, thresholds, ind):
     plt.title(f'Metrics for {model_name[0][:7]}')
     plt.legend(loc='upper right')
     plt.grid()
-
     plt.savefig(f'{ind}_{model_name[0][:7]}_metrics.png')
+
+
+print('3c. Збудувати в координатах (значення оцінки класифікаторів; кількість об’єктів кожного класу)',
+      'окремі для кожного класу графіки кількості об’єктів та відмітити вертикальними лініями оптимальні пороги відсічення для кожної метрики.')
+
+def show_objects_number(metrics, model_name, thresholds, ind):
+    diff = [abs(d1 - d2) for d1, d2 in zip(metrics['class_1'], metrics['class_0'])]
+    min_diff_index = diff.index(min(diff))
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(thresholds, metrics['class_0'], width=0.04, color='red', label='Сlass_0')
+    plt.bar(thresholds, metrics['class_1'], bottom=metrics['class_0'], width=0.04, color='blue', label='Сlass_1')
+    plt.axvline(x=thresholds[min_diff_index], color='black', linestyle='-', label='Min Difference')
+
+    plt.xlabel('Threshold')
+    plt.ylabel('Number of objects')
+    plt.title(f'{model_name[0][:7]}')
+    plt.legend(loc='upper right')
+    plt.savefig(f'{ind}_{model_name[0][:7]}_objnum.png')
+
+def graphs_number_of_objects_and_mertics(metrics, model_name, thresholds, ind):
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+    column_of_metrics = ['accuracy', 'precision', 'recall', 'f_scores', 'MCC', 'BA', 'Y_J_statistics']
+    class_1_value = metrics['class_1']
+    for i in column_of_metrics:
+        metrics_value = metrics[i]
+        metrics_max_value = max(metrics_value)
+        max_value_index = metrics_value.index(metrics_max_value)
+
+        axs[0].plot(class_1_value, metrics_value, label=i)
+        axs[0].axvline(x=class_1_value[max_value_index], color='black', linestyle='-')
+        axs[0].set_xlabel('Number of objects in Class 1')
+        axs[0].set_ylabel('Metric values')
+        axs[0].legend(loc='upper right')
+
+    class_0_value = metrics['class_0']
+    for i in column_of_metrics:
+        metrics_value = metrics[i]
+        metrics_max_value = max(metrics_value)
+        max_value_index = metrics_value.index(metrics_max_value)
+
+        axs[1].plot(class_0_value, metrics_value, label=i)
+        axs[1].axvline(x=class_0_value[max_value_index], color='black', linestyle='-')
+        axs[1].set_xlabel('Number of objects in Class 0')
+        axs[1].set_ylabel('Metric values')
+        axs[1].legend(loc='upper right')
+
+    plt.suptitle(f'{model_name[0][:7]}')
+    plt.legend(loc='upper right')
+    plt.savefig(f'{ind}_{model_name[0][:7]}_TEST 3C.png')
 
 
 print('3d. Збудувати для кожного класифікатору PR-криву та ROC-криву, показавши графічно на них значення оптимального порогу.')
@@ -143,7 +196,6 @@ def show_PRC(recall, precision, model_name, ind):
     plt.ylabel('Precision')
     plt.title(f'Precision-Recall Curve ({model_name[0][:7]})')
     plt.legend(loc='lower right')
-
     plt.savefig(f'{ind}_{model_name[0][:7]}_PRC.png')
 
 
@@ -152,14 +204,13 @@ def show_ROC(FPR, TPR, model_name, ind):
 
     plt.figure()
     plt.plot(FPR, TPR, marker="o", color='blue', lw=2.5, label=f'ROC curve (area = {AUC_PRC:.3f}')
-    plt.plot([1, 0], [0, 1], color='orange', lw=2.5, linestyle='-')
-    plt.plot([0, 1], [0, 1], color='green', lw=2, linestyle='--')
+    # plt.plot([1, 0], [0, 1], color='green', lw=2.5, linestyle='--')
+    plt.plot([0, 1], [0, 1], color='orange', lw=2, linestyle='-')
 
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title(f'Receiver Operating Characteristic ({model_name[0][:7]})')
     plt.legend(loc='upper right')
-
     plt.savefig(f'{ind}_{model_name[0][:7]}_ROC.png')
 
 metrics_df(data, 0.2, 1) # Завдання 3
@@ -190,9 +241,9 @@ print('6. Вивести відсоток видалених об’єктів �
 
 print("Кількість об'єктів класу 1 в початковому наборі даних:", class_1_count)
 print("Кількість об'єктів класу 0 в початковому наборі даних:", len(data) - class_1_count)
-new_class_1_count = new_data['GT'].sum()
-
 print(f"Відсоток видалених об'єктів класу 1: {percent_remove}%")
+
+new_class_1_count = new_data['GT'].sum()
 print("Кількість об'єктів класу 1 після видалення:", new_class_1_count)
 print("Кількість об'єктів класу 0 після видалення:", len(new_data) - new_class_1_count)
 
